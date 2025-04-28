@@ -31,4 +31,9 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+    	github.com/golang-jwt/jwt/v4 v4.11.0
+    	golang.org/x/crypto v0.10.0
+    	gorm.io/driver/sqlite v1.4.7
+    	gorm.io/gorm v1.26.5
+    	google.golang.org/grpc v1.59.0
 )
