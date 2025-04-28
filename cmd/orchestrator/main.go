@@ -7,7 +7,7 @@ import (
     "github.com/egocentri/finalproject/internal/middleware"
     "github.com/egocentri/finalproject/internal/models"
     "github.com/gin-gonic/gin"
-    "gorm.io/driver/sqlite"
+    "github.com/glebarez/sqlite"
     "gorm.io/gorm"
 )
 
