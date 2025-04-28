@@ -32,7 +32,7 @@ require (
 	google.golang.org/protobuf v1.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
     	github.com/golang-jwt/jwt/v4 v4.5.2
- 	github.com/glebarez/sqlite     v0.1.4
+ 	github.com/glebarez/sqlite     v1.25.7
     	gorm.io/gorm v1.26.0
     	google.golang.org/grpc v1.59.0
 )
