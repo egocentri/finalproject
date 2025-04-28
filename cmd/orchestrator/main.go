@@ -7,7 +7,6 @@ import (
     "github.com/egocentri/finalproject/internal/middleware"
     "github.com/egocentri/finalproject/internal/models"
     "github.com/gin-gonic/gin"
-    jwt "github.com/golang-jwt/jwt/v4"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
 )
