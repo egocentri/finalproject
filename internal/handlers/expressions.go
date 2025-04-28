@@ -9,6 +9,7 @@ import (
     "github.com/egocentri/finalproject/internal/models"
     "github.com/egocentri/finalproject/internal/services"
     "github.com/gin-gonic/gin"
+    "gorm.io/gorm"
 )
 
 type ExpressionsHandler struct{ db *gorm.DB }
