@@ -5,7 +5,6 @@ import (
     "net/http"
     "time"
 
-    "github.com/egocentri/finalproject/internal/middleware"
     "github.com/egocentri/finalproject/internal/models"
     "github.com/gin-gonic/gin"
     "gorm.io/gorm"
