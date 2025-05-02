@@ -1,4 +1,3 @@
-
 package integration
 
 import (
@@ -7,7 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
+	"time"
 
 	"github.com/egocentri/finalproject/internal/handlers"
 	"github.com/egocentri/finalproject/internal/middleware"
@@ -156,3 +155,4 @@ func TestAgentFlow(t *testing.T) {
 		t.Fatalf("DB stored result %q, want \"9\"", updated.Result)
 	}
 }
+
