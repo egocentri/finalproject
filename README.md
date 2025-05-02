@@ -12,7 +12,6 @@
 
 - **Go** ≥ 1.20 (рекомендуется 1.23+)  
 - **Node.js** ≥ 16 и **npm** или **yarn**  
-- Для `go-sqlite3` драйвера нужен CGO: компилятор C (gcc) или используйте чисто-Go драйвер `github.com/glebarez/sqlite` (в проекте уже настроено).  
 
 ---
 
@@ -26,33 +25,12 @@
    cd finalproject
    ```
 
-2. Приведите `go.mod` к минимальному виду (если не сделано):
-   ```go
-   module github.com/egocentri/finalproject
-
-   go 1.23
-
-   require (
-     github.com/gin-gonic/gin       v1.10.0
-     github.com/golang-jwt/jwt/v4   v4.5.2
-     golang.org/x/crypto            v0.10.0
-     github.com/glebarez/sqlite     v1.11.0
-     gorm.io/gorm                   v1.26.0
-   )
-   ```
-
-3. Удалите старый `go.sum`, подтяните зависимости и сгенерируйте новый:
-   ```bash
-   rm go.sum
-   go mod tidy
-   ```
-
-4. Запустите HTTP-сервис (оркестратор):
+2. Запустите HTTP-сервис (оркестратор):
    ```bash
    go run ./cmd/orchestrator/...
    ```
    - Слушает на `http://localhost:8080`  
-   - Автоматически создает/мигрирует файл `data.db`
+   - Автоматически создает файл `data.db`
 
 ### Agent
 
