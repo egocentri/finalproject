@@ -10,7 +10,6 @@ import (
     "github.com/egocentri/finalproject/internal/models"
     "github.com/egocentri/finalproject/internal/handlers"
     "github.com/egocentri/finalproject/internal/middleware"
-    "github.com/egocentri/finalproject/internal/services"
     "github.com/gin-gonic/gin"
     "gorm.io/driver/sqlite"
     "gorm.io/gorm"
