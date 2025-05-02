@@ -79,9 +79,4 @@ func TestFullHTTPFlow(t *testing.T) {
     json.NewDecoder(res.Body).Decode(&list)
     if len(list) != 1 { t.Fatalf("list len=%d", len(list)) }
 
-    // 5. Internal task & result
-    // seed a new expression with empty result
-    // simulate agent via HTTP:
-    // GET /internal/task → then POST result
-    // ... omitted for brevity ...
 }
