@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package dispcalc;
+
+option go_package = "github.com/egocentri/finalproject/cmd/orchestrator/proto;dispcalc";
+
+// Запрос вычисления выражения
+message ExpressionRequest {
+  string expression = 1;
+}
+
+// Ответ с результатом
+message ExpressionResponse {
+  string result = 1;
+}
+
+// Пустой запрос на получение задачи
+message Empty {}
+
+// Задача для агента
+message Task {
+  uint32 id              = 1;
+  string expression      = 2;
+  uint32 operation_time  = 3; // ms
+}
+
+// Запрос-ответ для задачи
+message TaskResponse {
+  Task task = 1;
+}
+
+// Запрос с результатом
+message TaskResult {
+  uint32 id     = 1;
+  string result = 2;
+}
+
+// Ответ-статус
+message Ack {
+  bool ok = 1;
+}
+
+// Сервис
+service Dispatcher {
+  // Агент запрашивает задачу
+  rpc GetTask(Empty) returns (TaskResponse);
+  // Агент возвращает результат
+  rpc PostTaskResult(TaskResult) returns (Ack);
+}
