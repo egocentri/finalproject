@@ -2,7 +2,6 @@ package grpc
 
 import (
     "context"
-    "fmt"
     "sync"
 
     proto "github.com/egocentri/finalproject/cmd/orchestrator/proto"
