@@ -15,50 +15,57 @@ import (
 )
 
 func main() {
+    // Загружаем конфиг (порт gRPC, секрет и т.п.)
     cfg := config.InitEnv()
 
+    // Подключаемся к gRPC-серверу
     addr := fmt.Sprintf("localhost:%s", cfg.GRPCPort)
     conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
     if err != nil {
-        log.Fatalf("gRPC dial: %v", err)
+        log.Fatalf("gRPC dial failed: %v", err)
     }
     defer conn.Close()
+
     client := proto.NewDispatcherClient(conn)
-    resp, err := client.GetTask(context.Background(), &proto.Empty{})
+
+    // Основной цикл: запрашиваем задачи, вычисляем, отдаем результат
+    for {
+        // 1) Получаем задачу
+        resp, err := client.GetTask(context.Background(), &proto.Empty{})
         if err != nil {
-            // Если нет задач — NotFound, ждём и повторяем
+            // Если задач нет — ждём немного и пробуем снова
             if status.Code(err) == codes.NotFound {
                 time.Sleep(500 * time.Millisecond)
                 continue
             }
-            // Иные ошибки выводим в лог и ждём
+            // Иная ошибка — логируем и тоже ждём
             log.Println("GetTask error:", err)
             time.Sleep(time.Second)
             continue
         }
 
         task := resp.GetTask()
-        log.Printf("Received task: ID=%d, expr=%s", task.Id, task.Expression)
+        log.Printf("Received task: ID=%d, expr=%q", task.Id, task.Expression)
 
-        // 2) Ждём operation_time
+        // 2) Симулируем задержку вычисления
         time.Sleep(time.Duration(task.OperationTime) * time.Millisecond)
 
-        // 3) Вычисляем
+        // 3) Вычисляем выражение
         result, err := services.Evaluate(task.Expression)
         if err != nil {
             log.Println("Evaluate error:", err)
             continue
         }
 
-        // 4) Отправляем результат
+        // 4) Отправляем результат обратно
         ack, err := client.PostTaskResult(context.Background(), &proto.TaskResult{
             Id:     task.Id,
             Result: fmt.Sprint(result),
         })
         if err != nil {
             log.Println("PostTaskResult error:", err)
-        } else {
-            log.Printf("Posted result. Ack: %v", ack.Ok)
+            continue
         }
+        log.Printf("Posted result for task %d, ack: %v", task.Id, ack.Ok)
     }
 }
