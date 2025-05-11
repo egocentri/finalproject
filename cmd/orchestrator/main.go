@@ -4,7 +4,7 @@ import (
     "log"
     "net"
 
-    "github.com/egocentri/finalproject/cmd/orchestrator/proto"
+    proto "github.com/egocentri/finalproject/cmd/orchestrator/proto"
     grpcSrv "github.com/egocentri/finalproject/internal/grpc"
     "github.com/egocentri/finalproject/internal/config"
     "github.com/egocentri/finalproject/internal/handlers"
