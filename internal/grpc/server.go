@@ -25,7 +25,7 @@ func NewServer(db *gorm.DB, cfg *config.EnvConfig) proto.DispatcherServer {
 }
 
 func (s *dispatcherServer) GetTask(_ context.Context, _ *proto.Empty) (*proto.TaskResponse, error) {
-var expr models.Expression
+    var expr models.Expression
     if err := s.db.Where("result = ?", "").First(&expr).Error; err != nil {
         if err == gorm.ErrRecordNotFound {
             return nil, status.Error(codes.NotFound, "no tasks available")
