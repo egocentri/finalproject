@@ -6,7 +6,7 @@ import (
     "log"
     "time"
 
-    "github.com/egocentri/finalproject/cmd/orchestrator/proto"
+    proto "github.com/egocentri/finalproject/cmd/orchestrator/proto"
     "github.com/egocentri/finalproject/internal/config"
     "github.com/egocentri/finalproject/internal/services"
     "google.golang.org/grpc"
