@@ -19,20 +19,24 @@ type dispatcherServer struct {
     nextID uint32
 }
 
+// NewServer возвращает реализацию proto.DispatcherServer
 func NewServer(db *gorm.DB, cfg *config.EnvConfig) proto.DispatcherServer {
     return &dispatcherServer{db: db, cfg: cfg}
 }
 
-func (s *dispatcherServer) GetTask(ctx context.Context, _ *proto.Empty) (*proto.TaskResponse, error) {
+func (s *dispatcherServer) GetTask(_ context.Context, _ *proto.Empty) (*proto.TaskResponse, error) {
+    // Находим первое "pending" выражение (где result = "")
     var expr models.Expression
     if err := s.db.Where("result = ?", "").First(&expr).Error; err != nil {
-        return nil, fmt.Errorf("no tasks: %w", err)
+        return nil, fmt.Errorf("no tasks available: %w", err)
     }
+    // Присваиваем новый ID задачи
     s.mu.Lock()
     s.nextID++
     id := s.nextID
     s.mu.Unlock()
 
+    // Возвращаем задачу агенту
     return &proto.TaskResponse{
         Task: &proto.Task{
             Id:             id,
@@ -42,7 +46,8 @@ func (s *dispatcherServer) GetTask(ctx context.Context, _ *proto.Empty) (*proto.
     }, nil
 }
 
-func (s *dispatcherServer) PostTaskResult(ctx context.Context, tr *proto.TaskResult) (*proto.Ack, error) {
+func (s *dispatcherServer) PostTaskResult(_ context.Context, tr *proto.TaskResult) (*proto.Ack, error) {
+    // Обновляем запись Expression по ID (здесь предполагается, что tr.Id == Expression.ID)
     if err := s.db.Model(&models.Expression{}).
         Where("id = ?", tr.Id).
         Update("result", tr.Result).Error; err != nil {
