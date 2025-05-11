@@ -169,20 +169,9 @@ go test ./tests/integration/...
 go clean -modcache
 
 # Обновление зависимостей
-go get github.com/gin-gonic/gin@v1.10.0
-go get github.com/golang-jwt/jwt/v4@v4.5.2
-go get golang.org/x/crypto@v0.10.0
-go get github.com/glebarez/sqlite@v1.11.0
-go get gorm.io/gorm@v1.26.0
 go mod tidy
 
-# Запуск без CGO (если используется go-sqlite3)
-export CGO_ENABLED=1
 
-# Запуск frontend
-cd frontend
-npm install
-npm run dev
 ```
 
 ---
