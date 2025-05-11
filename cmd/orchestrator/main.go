@@ -79,6 +79,3 @@ func main() {
         log.Fatalf("HTTP serve error: %v", err)
     }
 }
-
-}
-
