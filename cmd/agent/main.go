@@ -1,47 +1,41 @@
 package main
 
 import (
+    "context"
+    "fmt"
     "log"
-    "os"
     "time"
-    "bytes"
+
+    "github.com/egocentri/finalproject/cmd/orchestrator/proto"
+    "github.com/egocentri/finalproject/internal/config"
     "github.com/egocentri/finalproject/internal/services"
-    "net/http"
-    "encoding/json"
+    "google.golang.org/grpc"
 )
 
 func main() {
-    orchestratorURL := "http://localhost:8080"
-    if u := os.Getenv("ORCHESTRATOR_URL"); u != "" {
-        orchestratorURL = u
+    cfg := config.InitEnv()
+
+    addr := fmt.Sprintf("localhost:%s", cfg.GRPCPort)
+    conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
+    if err != nil {
+        log.Fatalf("gRPC dial: %v", err)
     }
+    defer conn.Close()
+    client := proto.NewDispatcherClient(conn)
+
     for {
-        // 1) Получаем задачу
-        resp, err := http.Get(orchestratorURL + "/api/v1/internal/task")
+        // 1) Запрос задачи
+        resp, err := client.GetTask(context.Background(), &proto.Empty{})
         if err != nil {
             log.Println("GetTask error:", err)
             time.Sleep(time.Second)
             continue
         }
-        if resp.StatusCode != http.StatusOK {
-            log.Println("No task available, status:", resp.StatusCode)
-            time.Sleep(time.Second)
-            continue
-        }
-        var body struct {
-            Task struct {
-                ID                uint   `json:"id"`
-                Expression        string `json:"expression"`
-                OperationTimeMs   int    `json:"operation_time_ms"`
-            } `json:"task"`
-        }
-        json.NewDecoder(resp.Body).Decode(&body)
-        resp.Body.Close()
-        task := body.Task
-        log.Printf("Got task %d: %s", task.ID, task.Expression)
+        task := resp.GetTask()
+        log.Printf("Received task: ID=%d, expr=%s", task.Id, task.Expression)
 
-        // 2) Ждём operation_time_ms
-        time.Sleep(time.Duration(task.OperationTimeMs) * time.Millisecond)
+        // 2) Ждём operation_time
+        time.Sleep(time.Duration(task.OperationTime) * time.Millisecond)
 
         // 3) Вычисляем
         result, err := services.Evaluate(task.Expression)
@@ -51,17 +45,14 @@ func main() {
         }
 
         // 4) Отправляем результат
-        payload, _ := json.Marshal(map[string]interface{}{
-            "id":     task.ID,
-            "result": result,
+        ack, err := client.PostTaskResult(context.Background(), &proto.TaskResult{
+            Id:     task.Id,
+            Result: fmt.Sprint(result),
         })
-        postResp, err := http.Post(orchestratorURL + "/api/v1/internal/task",
-            "application/json", bytes.NewBuffer(payload))
         if err != nil {
-            log.Println("PostResult error:", err)
-            continue
+            log.Println("PostTaskResult error:", err)
+        } else {
+            log.Printf("Posted result. Ack: %v", ack.Ok)
         }
-        postResp.Body.Close()
-        log.Printf("Submitted result for %d → %v (status %d)", task.ID, result, postResp.StatusCode)
     }
 }
