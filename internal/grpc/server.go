@@ -9,6 +9,8 @@ import (
     "github.com/egocentri/finalproject/internal/config"
     "github.com/egocentri/finalproject/internal/models"
     "gorm.io/gorm"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
 )
 
 type dispatcherServer struct {
@@ -24,9 +26,13 @@ func NewServer(db *gorm.DB, cfg *config.EnvConfig) proto.DispatcherServer {
 }
 
 func (s *dispatcherServer) GetTask(_ context.Context, _ *proto.Empty) (*proto.TaskResponse, error) {
-    var expr models.Expression
+var expr models.Expression
     if err := s.db.Where("result = ?", "").First(&expr).Error; err != nil {
-        return nil, fmt.Errorf("no tasks available: %w", err)
+        if err == gorm.ErrRecordNotFound {
+            return nil, status.Error(codes.NotFound, "no tasks available")
+        }
+        // Внутренняя ошибка СУБД
+        return nil, status.Errorf(codes.Internal, "database error: %v", err)
     }
     s.mu.Lock()
     s.nextID++
