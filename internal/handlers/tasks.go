@@ -3,7 +3,6 @@ package handlers
 import (
     "fmt"
     "net/http"
-    "strconv"
 
     "github.com/egocentri/finalproject/internal/models"
     "github.com/gin-gonic/gin"
