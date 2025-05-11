@@ -35,7 +35,7 @@ func main() {
         if err != nil {
             // Если задач нет — ждём немного и пробуем снова
             if status.Code(err) == codes.NotFound {
-                time.Sleep(500 * time.Millisecond)
+                time.Sleep(2000 * time.Millisecond)
                 continue
             }
             // Иная ошибка — логируем и тоже ждём
