@@ -13,7 +13,7 @@ import (
     "github.com/gin-gonic/gin"
     "google.golang.org/grpc"
     "google.golang.org/grpc/reflection"
-    "gorm.io/driver/sqlite"
+    "github.com/glebarez/sqlite"
     "gorm.io/gorm"
 )
 
