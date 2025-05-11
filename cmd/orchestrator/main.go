@@ -2,50 +2,67 @@ package main
 
 import (
     "log"
-    "os"
+    "net"
+
+    "github.com/egocentri/finalproject/cmd/orchestrator/proto"
+    grpcSrv "github.com/egocentri/finalproject/internal/grpc"
+    "github.com/egocentri/finalproject/internal/config"
     "github.com/egocentri/finalproject/internal/handlers"
     "github.com/egocentri/finalproject/internal/middleware"
     "github.com/egocentri/finalproject/internal/models"
     "github.com/gin-gonic/gin"
-    "github.com/glebarez/sqlite"
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/reflection"
+    "gorm.io/driver/sqlite"
     "gorm.io/gorm"
 )
 
-var jwtSecret = []byte("supersecretkey") 
 func main() {
+    cfg := config.InitEnv()
+
+    // ——— Настройка БД ———
     db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
     if err != nil {
-        log.Fatalf("DB connect error: %v", err)
+        log.Fatalf("failed to open DB: %v", err)
     }
-    if err := db.AutoMigrate(&models.User{}, &models.Expression{}); err != nil {
-        log.Fatalf("DB migrate error: %v", err)
-    }
+    db.AutoMigrate(&models.User{}, &models.Expression{})
+
+    // ——— HTTP API для пользователей ———
     r := gin.Default()
-    authH := handlers.NewAuthHandler(db, jwtSecret)
+    authH := handlers.NewAuthHandler(db, cfg.JWTSecret)
     exprH := handlers.NewExpressionsHandler(db)
-    taskH := handlers.NewTasksHandler(db)
 
     api := r.Group("/api/v1")
+    api.POST("/register", authH.Register)
+    api.POST("/login",    authH.Login)
+
+    secure := api.Group("/")
+    secure.Use(middleware.JWTAuthMiddleware(cfg.JWTSecret))
     {
-        api.POST("/register", authH.Register)
-        api.POST("/login",    authH.Login)
+        secure.POST("/calculate",   exprH.Calculate)
+        secure.GET ("/expressions", exprH.List)
+        secure.GET ("/expressions/:id", exprH.GetByID)
     }
-    apiAuth := api.Group("/")
-    apiAuth.Use(middleware.JWTAuthMiddleware(jwtSecret))
-    {
-        apiAuth.POST("/calculate",   exprH.Calculate)
-        apiAuth.GET ("/expressions", exprH.List)
-        apiAuth.GET ("/expressions/:id", exprH.GetByID)
-        // внутренние эндпоинты для агента
-        apiAuth.GET ("/internal/task",       taskH.GetTask)
-        apiAuth.POST("/internal/task",       taskH.PostResult)
-    }
-    port := "8080"
-    if p := os.Getenv("PORT"); p != "" {
-        port = p
-    }
-    log.Printf("HTTP server on :%s", port)
-    if err := r.Run(":" + port); err != nil {
-        log.Fatalf("Server error: %v", err)
+
+    // ——— gRPC-сервер для агентов ———
+    go func() {
+        lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
+        if err != nil {
+            log.Fatalf("gRPC listen failed: %v", err)
+        }
+        grpcServer := grpc.NewServer()
+        proto.RegisterDispatcherServer(grpcServer, grpcSrv.NewServer(db, cfg))
+        reflection.Register(grpcServer)
+        log.Printf("gRPC server listening on :%s", cfg.GRPCPort)
+        if err := grpcServer.Serve(lis); err != nil {
+            log.Fatalf("gRPC serve: %v", err)
+        }
+    }()
+
+    // ——— Запускаем HTTP ———
+    log.Printf("HTTP server listening on :%s", cfg.HTTPPort)
+    if err := r.Run(":" + cfg.HTTPPort); err != nil {
+        log.Fatalf("HTTP serve: %v", err)
     }
 }
+
