@@ -10,6 +10,8 @@ import (
     "github.com/egocentri/finalproject/internal/config"
     "github.com/egocentri/finalproject/internal/services"
     "google.golang.org/grpc"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
 )
 
 func main() {
@@ -22,15 +24,19 @@ func main() {
     }
     defer conn.Close()
     client := proto.NewDispatcherClient(conn)
-
-    for {
-        // 1) Запрос задачи
-        resp, err := client.GetTask(context.Background(), &proto.Empty{})
+    resp, err := client.GetTask(context.Background(), &proto.Empty{})
         if err != nil {
+            // Если нет задач — NotFound, ждём и повторяем
+            if status.Code(err) == codes.NotFound {
+                time.Sleep(500 * time.Millisecond)
+                continue
+            }
+            // Иные ошибки выводим в лог и ждём
             log.Println("GetTask error:", err)
             time.Sleep(time.Second)
             continue
         }
+
         task := resp.GetTask()
         log.Printf("Received task: ID=%d, expr=%s", task.Id, task.Expression)
 
